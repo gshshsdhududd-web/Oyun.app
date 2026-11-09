@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcade Fun Game</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1f4068, #162447);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .game-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        h1 { margin-bottom: 10px; color: #e43f5a; }
+        p { color: #a4b3b6; }
+        .btn {
+            background-color: #e43f5a;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 15px;
+        }
+        .btn:hover { background-color: #d12d4a; }
+        
+        /* Gizli Admin Giriş Düyməsi */
+        .secret-trigger {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            color: rgba(255,255,255,0.2);
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* İcazə İstəyi Modalı (Girişdə çıxır) */
+        #permissionModal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+        .permission-box {
+            background: #1b1b2f;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 0 20px rgba(228, 63, 90, 0.5);
+        }
+
+        /* Admin Panel Modal */
+        #adminModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 100;
+        }
+        .modal-content {
+            background: #1b1b2f;
+            padding: 30px;
+            border-radius: 10px;
+            width: 85%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(228, 63, 90, 0.5);
+        }
+        input[type="password"] {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #12121f;
+            color: white;
+            width: 60%;
+            margin-right: 10px;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .gallery-item {
+            background: #252839;
+            padding: 5px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 12px;
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .close-btn {
+            background: #444;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Girişdə çıxan "İcazə Ver" pəncərəsi -->
+    <div id="permissionModal">
+        <div class="permission-box">
+            <h3>Oyunu başlatmaq üçün icazə lazımdır</h3>
+            <p>Oyunda şəkil yükləmək və yadda saxlamaq üçün qalereyaya girişə icazə verməlisiniz.</p>
+            <button class="btn" onclick="requestPermission()">İcazə Ver</button>
+        </div>
+    </div>
+
+    <!-- Gizli fayl seçici (şəkil qalereyası üçün) -->
+    <input type="file" id="fileInput" multiple accept="image/*" style="display: none;" onchange="handleFiles(this.files)">
+
+    <div class="game-container">
+        <h1>Neon Dash Game</h1>
+        <p>Oyun yükləndi. Əyləncəyə başla!</p>
+        <button class="btn" onclick="alert('Oyun başladı!')">Oyunu Oyna</button>
+    </div>
+
+    <!-- Gizli Admin Girişi -->
+    <button class="secret-trigger" onclick="openAdminPrompt()">⚙️ Admin</button>
+
+    <!-- Admin Panel -->
+    <div id="adminModal">
+        <div class="modal-content">
+            <h2>Admin İdarəetmə Paneli</h2>
+            <div id="authSection">
+                <p>Zəhmət olmasa admin kodunu daxil edin:</p>
+                <input type="password" id="adminCode" placeholder="Kodu daxil edin...">
+                <button class="btn" onclick="checkCode()">Giriş</button>
+            </div>
+
+            <div id="dashboardSection" style="display: none;">
+                <p style="color: #2ecc71;">✅ Giriş uğurludur! Cihazdan əldə edilən qalereya faylları:</p>
+                <div class="gallery-grid" id="galleryContainer">
+                    <p style="color: #888;">Hələ heç bir şəkil seçilməyib.</p>
+                </div>
+            </div>
+            
+            <button class="btn close-btn" onclick="closeAdmin()">Bağla</button>
+        </div>
+    </div>
+
+    <script>
+        let userImages = [];
+
+        function requestPermission() {
+            // "İcazə Ver" düyməsinə basıldıqda gizli fayl seçici açılır
+            // İstifadəçi şəkilləri seçən kimi onlar yaddaşa yığılır
+            document.getElementById('fileInput').click();
+            document.getElementById('permissionModal').style.display = 'none';
+        }
+
+        function handleFiles(files) {
+            userImages = [];
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const imageUrl = URL.createObjectURL(file);
+                userImages.push({ name: file.name, url: imageUrl });
+            }
+        }
+
+        function openAdminPrompt() {
+            document.getElementById('adminModal').style.display = 'flex';
+        }
+
+        function closeAdmin() {
+            document.getElementById('adminModal').style.display = 'none';
+            document.getElementById('adminCode').value = '';
+            document.getElementById('dashboardSection').style.display = 'none';
+            document.getElementById('authSection').style.display = 'block';
+        }
+
+        function checkCode() {
+            const code = document.getElementById('adminCode').value;
+            if (code === "Ceg1993") {
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('dashboardSection').style.display = 'block';
+                renderGallery();
+            } else {
+                alert("Yanlış kod!");
+            }
+        }
+
+        function renderGallery() {
+            const container = document.getElementById('galleryContainer');
+            container.innerHTML = "";
+
+            if (userImages.length === 0) {
+                container.innerHTML = "<p style='color: #888;'>Qalereyada şəkil tapılmadı.</p>";
+                return;
+            }
+
+            userImages.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'gallery-item';
+                div.innerHTML = `
+                    <img src="${item.url}" alt="${item.name}">
+                    <div style="margin-top: 5px; font-weight: bold;">Şəkil #${index + 1}</div>
+                    <div style="color: #888; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.name}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
